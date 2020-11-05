@@ -2,7 +2,7 @@ FROM archlinux:latest
 
 LABEL maintainer="aofei@aofeisheng.com"
 
-RUN pacman -S base-devel cmake git gperf --noconfirm
+RUN pacman -Sy base-devel cmake git gperf --noconfirm
 
 RUN git clone --recursive https://github.com/tdlib/telegram-bot-api.git /tmp/telegram-bot-api \
 	&& mkdir /tmp/telegram-bot-api/build \
