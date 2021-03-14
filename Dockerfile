@@ -1,8 +1,12 @@
-FROM archlinux:latest
+FROM ubuntu:20.04
 
 LABEL maintainer="aofei@aofeisheng.com"
 
-RUN pacman -Sy base-devel cmake git gperf --noconfirm
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt update \
+	&& apt upgrade -y \
+	&& apt install cmake g++ git gperf libssl-dev make zlib1g-dev -y
 
 RUN git clone --recursive https://github.com/tdlib/telegram-bot-api.git /tmp/telegram-bot-api \
 	&& mkdir /tmp/telegram-bot-api/build \
