@@ -1,28 +1,18 @@
-FROM ubuntu:20.04
+FROM alpine
 
 LABEL maintainer="aofei@aofeisheng.com"
 
-ARG DEBIAN_FRONTEND=noninteractive
-
-RUN apt update \
-	&& apt upgrade -y \
-	&& apt install cmake g++ git gperf libssl-dev make zlib1g-dev -y \
-	&& apt autoremove -y \
-	&& apt autoclean
-
-RUN git clone --recursive https://github.com/tdlib/telegram-bot-api.git /tmp/telegram-bot-api \
+RUN export BUILD_ONLY_PKGS="alpine-sdk cmake git gperf linux-headers openssl-dev zlib-dev" \
+	&& apk add --no-cache $BUILD_ONLY_PKGS \
+	&& git clone --recursive https://github.com/tdlib/telegram-bot-api.git /tmp/telegram-bot-api \
 	&& mkdir /tmp/telegram-bot-api/build \
 	&& cd /tmp/telegram-bot-api/build \
-	&& cmake -DCMAKE_BUILD_TYPE=Release .. \
-	&& cmake --build . --target install
+	&& cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .. \
+	&& cmake --build . --target install \
+	&& rm -rf /tmp/telegram-bot-api \
+	&& apk del $BUILD_ONLY_PKGS
 
-WORKDIR /srv/telegram-bot-api
+RUN apk add --no-cache libstdc++ openssl zlib
 
-CMD telegram-bot-api \
-	--local \
-	--api-id=$TELEGRAM_API_ID \
-	--api-hash=$TELEGRAM_API_HASH \
-	--http-port=80 \
-	--http-stat-port=8080 \
-	--dir=/srv/telegram-bot-api \
-	--temp-dir=/tmp/telegram-bot-api
+ENTRYPOINT ["telegram-bot-api"]
+CMD ["--version"]
