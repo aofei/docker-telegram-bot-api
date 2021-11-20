@@ -15,4 +15,4 @@ RUN export BUILD_ONLY_PKGS="alpine-sdk cmake git gperf linux-headers openssl-dev
 RUN apk add --no-cache libstdc++ openssl zlib
 
 ENTRYPOINT ["telegram-bot-api"]
-CMD ["--version"]
+CMD ["--help"]
