@@ -9,8 +9,7 @@ RUN export BUILD_ONLY_PKGS="alpine-sdk cmake git gperf linux-headers openssl-dev
 	&& cd /tmp/telegram-bot-api/build \
 	&& cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .. \
 	&& cmake --build . --target install \
-	&& rm -rf /tmp \
-	&& mkdir /tmp \
+	&& rm -rf /tmp/* \
 	&& apk del $BUILD_ONLY_PKGS
 
 RUN apk add --no-cache libstdc++ openssl zlib
