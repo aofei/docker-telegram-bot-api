@@ -1,21 +1,21 @@
-FROM alpine
+FROM alpine AS build
 
-LABEL maintainer="aofei@aofeisheng.com"
+ARG TELEGRAM_BOT_API_GIT_REF
 
-ARG GIT_COMMIT_HASH=master
-
-RUN export BUILD_ONLY_PKGS="alpine-sdk cmake git gperf linux-headers openssl-dev zlib-dev" \
-	&& apk add --no-cache $BUILD_ONLY_PKGS \
-	&& git clone --recursive https://github.com/tdlib/telegram-bot-api.git /tmp/telegram-bot-api \
-	&& cd /tmp/telegram-bot-api \
-	&& git checkout $GIT_COMMIT_HASH \
+RUN apk add --no-cache alpine-sdk cmake git gperf linux-headers ninja openssl-dev zlib-dev
+RUN git clone --recursive https://github.com/tdlib/telegram-bot-api.git /usr/local/src/telegram-bot-api \
+	&& cd /usr/local/src/telegram-bot-api \
+	&& if [ ! -z $TELEGRAM_BOT_API_GIT_REF ]; then git checkout $TELEGRAM_BOT_API_GIT_REF; fi \
 	&& mkdir build \
 	&& cd build \
-	&& cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .. \
+	&& cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=.. -G Ninja .. \
 	&& cmake --build . --target install \
-	&& rm -rf /tmp/* \
-	&& apk del $BUILD_ONLY_PKGS
+	&& strip ../bin/*
 
-RUN apk add --no-cache libstdc++ openssl zlib
+FROM alpine
 
-ENTRYPOINT ["telegram-bot-api"]
+COPY --from=build /usr/local/src/telegram-bot-api/bin/ /usr/local/bin/
+
+RUN apk add --no-cache libstdc++ openssl
+
+ENTRYPOINT ["/usr/local/bin/telegram-bot-api"]
