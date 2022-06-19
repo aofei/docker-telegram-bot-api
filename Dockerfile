@@ -18,4 +18,4 @@ COPY --from=build /usr/local/src/telegram-bot-api/bin/ /usr/local/bin/
 
 RUN apk add --no-cache libstdc++ openssl
 
-CMD ["/usr/local/bin/telegram-bot-api", "--local"]
+ENTRYPOINT ["/usr/local/bin/telegram-bot-api", "--local"]
