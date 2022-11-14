@@ -9,9 +9,9 @@ jobs:
   prepare-docker-image-build-metadata:
     runs-on: ubuntu-latest
     outputs:
-      docker-image-tag: ${{steps.prepare-docker-image-build-metadata.outputs.docker-image-tag}}
-      docker-image-tag-pushable: ${{steps.prepare-docker-image-build-metadata.outputs.docker-image-tag-pushable}}
-      docker-image-build-arg-telegram-bot-api-git-ref: ${{steps.prepare-docker-image-build-metadata.outputs.docker-image-build-arg-telegram-bot-api-git-ref}}
+      DOCKER_IMAGE_TAG: ${{steps.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG}}
+      DOCKER_IMAGE_TAG_PUSHABLE: ${{steps.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG_PUSHABLE}}
+      DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF: ${{steps.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF}}
     steps:
       - name: Check out Telegram Bot API code
         uses: actions/checkout@v3
@@ -30,13 +30,13 @@ jobs:
             DOCKER_IMAGE_TAG_PUSHABLE=0
           fi
           DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF=$(cd telegram-bot-api && git rev-parse HEAD | head -1 && cd ..)
-          echo "::set-output name=docker-image-tag::$DOCKER_IMAGE_TAG"
-          echo "::set-output name=docker-image-tag-pushable::$DOCKER_IMAGE_TAG_PUSHABLE"
-          echo "::set-output name=docker-image-build-arg-telegram-bot-api-git-ref::$DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF"
+          echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "DOCKER_IMAGE_TAG_PUSHABLE=$DOCKER_IMAGE_TAG_PUSHABLE" >> $GITHUB_OUTPUT
+          echo "DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF=$DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF" >> $GITHUB_OUTPUT
   build-multiarch-docker-images:
     runs-on: ubuntu-latest
     needs: prepare-docker-image-build-metadata
-    if: ${{github.event_name != 'schedule' || needs.prepare-docker-image-build-metadata.outputs.docker-image-tag-pushable == 1}}
+    if: ${{github.event_name != 'schedule' || needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG_PUSHABLE == 1}}
     strategy:
       matrix:
         platform:
@@ -58,7 +58,7 @@ jobs:
         with:
           context: .
           platforms: ${{matrix.platform}}
-          build-args: TELEGRAM_BOT_API_GIT_REF=${{needs.prepare-docker-image-build-metadata.outputs.docker-image-build-arg-telegram-bot-api-git-ref}}
+          build-args: TELEGRAM_BOT_API_GIT_REF=${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF}}
           cache-to: type=local,dest=docker-image-build-caches/${{matrix.platform}},mode=max
       - name: Upload Docker image build caches
         uses: actions/upload-artifact@v3
@@ -68,7 +68,7 @@ jobs:
   publish-docker-image:
     runs-on: ubuntu-latest
     needs: [prepare-docker-image-build-metadata, build-multiarch-docker-images]
-    if: ${{github.event_name != 'schedule' || needs.prepare-docker-image-build-metadata.outputs.docker-image-tag-pushable == 1}}
+    if: ${{github.event_name != 'schedule' || needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG_PUSHABLE == 1}}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -103,7 +103,7 @@ jobs:
             linux/arm/v7
             linux/arm64
             linux/ppc64le
-          build-args: TELEGRAM_BOT_API_GIT_REF=${{needs.prepare-docker-image-build-metadata.outputs.docker-image-build-arg-telegram-bot-api-git-ref}}
+          build-args: TELEGRAM_BOT_API_GIT_REF=${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF}}
           cache-from: |
             type=local,src=docker-image-build-caches/linux/386
             type=local,src=docker-image-build-caches/linux/amd64
@@ -111,9 +111,9 @@ jobs:
             type=local,src=docker-image-build-caches/linux/arm/v7
             type=local,src=docker-image-build-caches/linux/arm64
             type=local,src=docker-image-build-caches/linux/ppc64le
-          push: ${{needs.prepare-docker-image-build-metadata.outputs.docker-image-tag-pushable == 1}}
+          push: ${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG_PUSHABLE == 1}}
           tags: |
-            ${{secrets.DOCKER_USERNAME}}/telegram-bot-api:${{needs.prepare-docker-image-build-metadata.outputs.docker-image-tag}}
+            ${{secrets.DOCKER_USERNAME}}/telegram-bot-api:${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG}}
             ${{secrets.DOCKER_USERNAME}}/telegram-bot-api:latest
-            ghcr.io/${{github.repository_owner}}/telegram-bot-api:${{needs.prepare-docker-image-build-metadata.outputs.docker-image-tag}}
+            ghcr.io/${{github.repository_owner}}/telegram-bot-api:${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG}}
             ghcr.io/${{github.repository_owner}}/telegram-bot-api:latest
