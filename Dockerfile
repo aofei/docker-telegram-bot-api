@@ -1,4 +1,4 @@
-FROM alpine:3.17 AS build
+FROM alpine:3.18 AS build
 
 ARG TELEGRAM_BOT_API_GIT_REF
 
@@ -12,7 +12,7 @@ RUN git clone --recursive https://github.com/tdlib/telegram-bot-api.git /usr/loc
 	&& cmake --build . --target install \
 	&& strip ../bin/*
 
-FROM alpine:3.17
+FROM alpine:3.18
 
 COPY --from=build /usr/local/src/telegram-bot-api/bin/ /usr/local/bin/
 
