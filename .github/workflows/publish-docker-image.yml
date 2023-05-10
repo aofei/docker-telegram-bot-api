@@ -24,7 +24,7 @@ jobs:
           DOCKER_IMAGE_TAG=$(grep "project(TelegramBotApi VERSION " telegram-bot-api/CMakeLists.txt | cut -d " " -f 3)
           if [[ ${{github.event_name}} != "pull_request" ]]; then
             DOCKER_IMAGE_TAG_DOCKER_HUB_EXISTS=$(docker manifest inspect ${{secrets.DOCKER_USERNAME}}/telegram-bot-api:$DOCKER_IMAGE_TAG &> /dev/null && echo 1 || echo 0)
-            DOCKER_IMAGE_TAG_GITHUB_CONTAINER_REGISTRY_EXISTS=$(docker manifest inspect ${{github.repository_owner}}/telegram-bot-api:$DOCKER_IMAGE_TAG &> /dev/null && echo 1 || echo 0)
+            DOCKER_IMAGE_TAG_GITHUB_CONTAINER_REGISTRY_EXISTS=$(docker manifest inspect ghcr.io/${{github.repository_owner}}/telegram-bot-api:$DOCKER_IMAGE_TAG &> /dev/null && echo 1 || echo 0)
             DOCKER_IMAGE_TAG_PUSHABLE=$([[ $DOCKER_IMAGE_TAG_DOCKER_HUB_EXISTS -eq 0 || $DOCKER_IMAGE_TAG_GITHUB_CONTAINER_REGISTRY_EXISTS -eq 0 ]] && echo 1 || echo 0)
           else
             DOCKER_IMAGE_TAG_PUSHABLE=0
