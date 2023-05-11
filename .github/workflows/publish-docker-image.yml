@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       DOCKER_IMAGE_TAG: ${{steps.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG}}
-      DOCKER_IMAGE_TAG_PUSHABLE: ${{steps.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG_PUSHABLE}}
       DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF: ${{steps.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF}}
     steps:
       - name: Check out Telegram Bot API code
@@ -22,21 +21,12 @@ jobs:
         id: prepare-docker-image-build-metadata
         run: |
           DOCKER_IMAGE_TAG=$(grep "project(TelegramBotApi VERSION " telegram-bot-api/CMakeLists.txt | cut -d " " -f 3)
-          if [[ ${{github.event_name}} != "pull_request" ]]; then
-            DOCKER_IMAGE_TAG_DOCKER_HUB_EXISTS=$(docker manifest inspect ${{secrets.DOCKER_USERNAME}}/telegram-bot-api:$DOCKER_IMAGE_TAG &> /dev/null && echo 1 || echo 0)
-            DOCKER_IMAGE_TAG_GITHUB_CONTAINER_REGISTRY_EXISTS=$(docker manifest inspect ghcr.io/${{github.repository_owner}}/telegram-bot-api:$DOCKER_IMAGE_TAG &> /dev/null && echo 1 || echo 0)
-            DOCKER_IMAGE_TAG_PUSHABLE=$([[ $DOCKER_IMAGE_TAG_DOCKER_HUB_EXISTS -eq 0 || $DOCKER_IMAGE_TAG_GITHUB_CONTAINER_REGISTRY_EXISTS -eq 0 ]] && echo 1 || echo 0)
-          else
-            DOCKER_IMAGE_TAG_PUSHABLE=0
-          fi
           DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF=$(cd telegram-bot-api && git rev-parse HEAD | head -1 && cd ..)
           echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "DOCKER_IMAGE_TAG_PUSHABLE=$DOCKER_IMAGE_TAG_PUSHABLE" >> $GITHUB_OUTPUT
           echo "DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF=$DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF" >> $GITHUB_OUTPUT
   build-multiarch-docker-images:
     runs-on: ubuntu-latest
     needs: prepare-docker-image-build-metadata
-    if: ${{github.event_name != 'schedule' || needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG_PUSHABLE == 1}}
     strategy:
       matrix:
         platform:
@@ -68,7 +58,6 @@ jobs:
   publish-docker-image:
     runs-on: ubuntu-latest
     needs: [prepare-docker-image-build-metadata, build-multiarch-docker-images]
-    if: ${{github.event_name != 'schedule' || needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG_PUSHABLE == 1}}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -111,7 +100,7 @@ jobs:
             type=local,src=docker-image-build-caches/linux/arm/v7
             type=local,src=docker-image-build-caches/linux/arm64
             type=local,src=docker-image-build-caches/linux/ppc64le
-          push: ${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG_PUSHABLE == 1}}
+          push: ${{github.event_name != 'pull_request'}}
           tags: |
             ${{secrets.DOCKER_USERNAME}}/telegram-bot-api:${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG}}
             ${{secrets.DOCKER_USERNAME}}/telegram-bot-api:latest
