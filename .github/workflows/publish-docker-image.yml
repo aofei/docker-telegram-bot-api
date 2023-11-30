@@ -13,7 +13,7 @@ jobs:
       DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF: ${{steps.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF}}
     steps:
       - name: Check out Telegram Bot API code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tdlib/telegram-bot-api
           path: telegram-bot-api
@@ -30,21 +30,21 @@ jobs:
     strategy:
       matrix:
         platform:
-          - "linux/386"
-          - "linux/amd64"
-          - "linux/arm/v6"
-          - "linux/arm/v7"
-          - "linux/arm64"
-          - "linux/ppc64le"
+          - linux/386
+          - linux/amd64
+          - linux/arm/v6
+          - linux/arm/v7
+          - linux/arm64
+          - linux/ppc64le
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Build Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: .
           platforms: ${{matrix.platform}}
@@ -60,29 +60,24 @@ jobs:
     needs: [prepare-docker-image-build-metadata, build-multiarch-docker-images]
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Download Docker image build caches
         uses: actions/download-artifact@v3
         with:
           name: docker-image-build-caches
           path: docker-image-build-caches
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{secrets.DOCKER_USERNAME}}
-          password: ${{secrets.DOCKER_PASSWORD}}
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{github.actor}}
           password: ${{github.token}}
       - name: Build and push Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: .
           platforms: |
@@ -102,7 +97,5 @@ jobs:
             type=local,src=docker-image-build-caches/linux/ppc64le
           push: ${{github.event_name != 'pull_request'}}
           tags: |
-            ${{secrets.DOCKER_USERNAME}}/telegram-bot-api:${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG}}
-            ${{secrets.DOCKER_USERNAME}}/telegram-bot-api:latest
             ghcr.io/${{github.repository_owner}}/telegram-bot-api:${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG}}
             ghcr.io/${{github.repository_owner}}/telegram-bot-api:latest
