@@ -44,11 +44,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Build Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: ${{matrix.platform}}
-          build-args: TELEGRAM_BOT_API_GIT_REF=${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF}}
+          build-args: |
+            TELEGRAM_BOT_API_GIT_REF=${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF}}
           cache-to: type=local,dest=docker-image-build-caches/${{matrix.platform}},mode=max
       - name: Prepare artifact name for Docker image build caches
         run: |
@@ -82,7 +83,7 @@ jobs:
           username: ${{github.actor}}
           password: ${{github.token}}
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: |
@@ -92,7 +93,8 @@ jobs:
             linux/arm/v7
             linux/arm64
             linux/ppc64le
-          build-args: TELEGRAM_BOT_API_GIT_REF=${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF}}
+          build-args: |
+            TELEGRAM_BOT_API_GIT_REF=${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF}}
           cache-from: |
             type=local,src=docker-image-build-caches/linux/386
             type=local,src=docker-image-build-caches/linux/amd64
