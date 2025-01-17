@@ -25,8 +25,8 @@ jobs:
           echo "DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG}" >> ${GITHUB_OUTPUT}
           echo "DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF=${DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF}" >> ${GITHUB_OUTPUT}
   build-multiarch-docker-images:
-    runs-on: ubuntu-latest
     needs: prepare-docker-image-build-metadata
+    runs-on: ${{startsWith(matrix.platform, 'linux/arm') && 'ubuntu-24.04-arm' || 'ubuntu-latest'}}
     strategy:
       matrix:
         platform:
@@ -61,8 +61,8 @@ jobs:
           name: docker-image-build-caches-${{env.DOCKER_IMAGE_BUILD_CACHES_ARTIFACT_NAME}}
           path: docker-image-build-caches
   publish-docker-image:
-    runs-on: ubuntu-latest
     needs: [prepare-docker-image-build-metadata, build-multiarch-docker-images]
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v4
