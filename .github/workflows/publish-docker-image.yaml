@@ -35,7 +35,6 @@ jobs:
           - linux/arm/v6
           - linux/arm/v7
           - linux/arm64
-          - linux/ppc64le
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -92,7 +91,6 @@ jobs:
             linux/arm/v6
             linux/arm/v7
             linux/arm64
-            linux/ppc64le
           build-args: |
             TELEGRAM_BOT_API_GIT_REF=${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF}}
           cache-from: |
@@ -101,7 +99,6 @@ jobs:
             type=local,src=docker-image-build-caches/linux/arm/v6
             type=local,src=docker-image-build-caches/linux/arm/v7
             type=local,src=docker-image-build-caches/linux/arm64
-            type=local,src=docker-image-build-caches/linux/ppc64le
           push: ${{github.event_name != 'pull_request'}}
           tags: |
             ghcr.io/${{github.repository_owner}}/telegram-bot-api:${{needs.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_TAG}}
