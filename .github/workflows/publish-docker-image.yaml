@@ -13,7 +13,7 @@ jobs:
       DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF: ${{steps.prepare-docker-image-build-metadata.outputs.DOCKER_IMAGE_BUILD_ARG_TELEGRAM_BOT_API_GIT_REF}}
     steps:
       - name: Check out Telegram Bot API code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: tdlib/telegram-bot-api
           path: telegram-bot-api
@@ -37,7 +37,7 @@ jobs:
           - linux/arm64
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -55,7 +55,7 @@ jobs:
           DOCKER_IMAGE_BUILD_CACHES_ARTIFACT_NAME=$(echo '${{matrix.platform}}' | sed 's/\//-/g')
           echo "DOCKER_IMAGE_BUILD_CACHES_ARTIFACT_NAME=${DOCKER_IMAGE_BUILD_CACHES_ARTIFACT_NAME}" >> ${GITHUB_ENV}
       - name: Upload Docker image build caches
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docker-image-build-caches-${{env.DOCKER_IMAGE_BUILD_CACHES_ARTIFACT_NAME}}
           path: docker-image-build-caches
@@ -64,13 +64,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Download Docker image build caches
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: docker-image-build-caches
           pattern: docker-image-build-caches-*
