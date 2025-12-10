@@ -1,4 +1,4 @@
-FROM alpine:3.22 AS build
+FROM alpine:3.23 AS build
 
 ARG TELEGRAM_BOT_API_GIT_REF=master
 
@@ -13,7 +13,7 @@ RUN cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=.. -G Ninja .
 RUN cmake --build . --target install
 RUN strip ../bin/*
 
-FROM alpine:3.22
+FROM alpine:3.23
 
 COPY --from=build /usr/local/src/telegram-bot-api/bin/ /usr/local/bin/
 
